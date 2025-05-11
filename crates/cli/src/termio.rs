@@ -1,20 +1,38 @@
 use std::{
     fs::File,
-    io::{Result, stdin, stdout},
+    io::{Error, ErrorKind, Read, Result, Seek, SeekFrom, Write, stdin, stdout},
     path::PathBuf,
 };
 
-/*use minibinrw::{BinReadable, BinWritable};
+fn part_cur_err() -> Error {
+    Error::new(
+        ErrorKind::NotSeekable,
+        "PartialCursor does not support seeking",
+    )
+}
 
 #[derive(Debug)]
-struct PartialCursor<T> {
+pub struct PartialCursor<T> {
     pos: u64,
     inner: T,
 }
 
 impl<T> PartialCursor<T> {
-    fn new(inner: T) -> Self {
+    pub fn new(inner: T) -> Self {
         Self { inner, pos: 0 }
+    }
+}
+
+impl<T> Seek for PartialCursor<T> {
+    fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
+        let SeekFrom::Current(pos) = pos else {
+            return Err(part_cur_err());
+        };
+        if pos == 0 {
+            Ok(self.pos)
+        } else {
+            Err(part_cur_err())
+        }
     }
 }
 
@@ -26,27 +44,21 @@ impl<T: Read> Read for PartialCursor<T> {
     }
 }
 
-fn part_cur_err() -> Error {
-    Error::new(
-        ErrorKind::NotSeekable,
-        "PartialCursor does not support seeking",
-    )
+impl<T: Write> Write for PartialCursor<T> {
+    fn write(&mut self, buf: &[u8]) -> Result<usize> {
+        let n = self.inner.write(buf)?;
+        self.pos += n as u64;
+        Ok(n)
+    }
+    fn write_vectored(&mut self, bufs: &[std::io::IoSlice<'_>]) -> Result<usize> {
+        let n = self.inner.write_vectored(bufs)?;
+        self.pos += n as u64;
+        Ok(n)
+    }
+    fn flush(&mut self) -> Result<()> {
+        self.inner.flush()
+    }
 }
-
-impl<T> Seek for PartialCursor<T> {
-    fn seek(&mut self, _pos: std::io::SeekFrom) -> Result<u64> {
-        Err(part_cur_err())
-    }
-    fn rewind(&mut self) -> Result<()> {
-        Err(part_cur_err())
-    }
-    fn seek_relative(&mut self, _offset: i64) -> Result<()> {
-        Err(part_cur_err())
-    }
-    fn stream_position(&mut self) -> Result<u64> {
-        Ok(self.pos)
-    }
-}*/
 
 fn stdin_file() -> File {
     use std::os::unix::io::{AsRawFd, FromRawFd};

@@ -9,7 +9,7 @@ use minibinrw::{BinWritable, MiniBinWrite};
 
 use crate::{
     cli::{ListArgs, StripArgs},
-    termio::{input_file_or_stdin, output_file_or_stdout},
+    termio::{PartialCursor, input_file_or_stdin, output_file_or_stdout},
 };
 
 fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
@@ -83,7 +83,9 @@ pub fn rscpio_list(args: ListArgs) -> Result<()> {
 
 pub fn rscpio_strip(args: StripArgs) -> Result<()> {
     let mut input_ref = BufReader::new(input_file_or_stdin(&args.input)?);
-    let mut output_ref = BufWriter::new(output_file_or_stdout(&args.output)?);
+    let output_ref = output_file_or_stdout(&args.output)?;
+    let output_ref = PartialCursor::new(output_ref);
+    let mut output_ref = BufWriter::new(output_ref);
     if args.sort {
         cpio_strip_with_sort(&mut input_ref, &mut output_ref, &args)?;
     } else {
