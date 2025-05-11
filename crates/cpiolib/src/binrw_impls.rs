@@ -6,7 +6,8 @@ use std::{
 use easy_ext::ext;
 use minibinrw::{
     BadMagicError, CustomError, MiniBinError, MiniBinRead, MiniBinWrite, Result,
-    binrw::Error as BinError, impl_binread_with_mini, impl_binwrite_with_mini,
+    binrw::{Endian, Error as BinError},
+    impl_binread_with_mini, impl_binwrite_with_mini,
 };
 
 use crate::{
@@ -41,7 +42,7 @@ impl MiniBinError {
 }
 
 impl MiniBinRead for Header {
-    fn m_read(reader: &mut impl Read) -> Result<Self> {
+    fn m_read_options(reader: &mut impl Read, _endian: Endian) -> Result<Self> {
         let mut magic = [0; 6];
         reader.read_exact(&mut magic)?;
         if magic != MAGIC_NEWC {
@@ -83,24 +84,9 @@ impl MiniBinRead for Header {
 }
 
 impl_binread_with_mini!(Header);
-/*impl BinRead for Header {
-    type Args<'a> = ();
-    fn read_options<R: Read + std::io::Seek>(
-        reader: &mut R,
-        _endian: binrw::Endian,
-        _args: Self::Args<'_>,
-    ) -> binrw::BinResult<Self> {
-        let pos = reader.stream_position()?;
-        //let mut buf = [0; 512];
-        //let _ = reader.read(&mut buf);
-        //println!("{:X?}", buf);
-        //reader.seek(std::io::SeekFrom::Start(pos)).unwrap();
-        Self::m_read(reader).map_err(|e| CpioxError::into_binrw(e, pos))
-    }
-}*/
 
 impl MiniBinWrite for Header {
-    fn m_write(&self, writer: &mut impl Write) -> Result<()> {
+    fn m_write_options(&self, writer: &mut impl Write, _endian: Endian) -> Result<()> {
         let name = self.name.as_bytes_with_nul();
         writer.write_all(MAGIC_NEWC)?;
         writer.write_u32_hex(self.ino)?;
@@ -125,8 +111,8 @@ impl MiniBinWrite for Header {
 impl_binwrite_with_mini!(Header);
 
 impl MiniBinRead for CpioEntry {
-    fn m_read(reader: &mut impl Read) -> Result<Self> {
-        let header = Header::m_read(reader)?;
+    fn m_read_options(reader: &mut impl Read, endian: Endian) -> Result<Self> {
+        let header = Header::m_read_options(reader, endian)?;
         let mut contents = vec![0; header.filesize as usize];
         reader.read_exact(&mut contents)?;
         reader.read_pad(header.filesize as usize)?;
@@ -137,7 +123,7 @@ impl MiniBinRead for CpioEntry {
 impl_binread_with_mini!(CpioEntry);
 
 impl MiniBinWrite for CpioEntry {
-    fn m_write(&self, writer: &mut impl Write) -> Result<()> {
+    fn m_write_options(&self, writer: &mut impl Write, endian: Endian) -> Result<()> {
         let mut hcopy = None;
         let href = if self.contents.len() == self.header.filesize as usize {
             &self.header
@@ -147,7 +133,7 @@ impl MiniBinWrite for CpioEntry {
             header._checksum = 0;
             hcopy.replace_ref(header)
         };
-        href.m_write(writer)?;
+        href.m_write_options(writer, endian)?;
         writer.write_all(&self.contents)?;
         writer.write_pad(self.contents.len())?;
         Ok(())

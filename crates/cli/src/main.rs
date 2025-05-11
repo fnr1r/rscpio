@@ -24,7 +24,7 @@ fn cpiostrip<W: Write + Seek>(
     let mut ino = 1;
     let mut _h_old;
     'main: loop {
-        let mut h = match Header::m_read(input) {
+        let mut h = match Header::m_read_ne(input) {
             Ok(res) => res,
             Err(e) => {
                 'emptychk: {
@@ -52,7 +52,7 @@ fn cpiostrip<W: Write + Seek>(
         if args.reset_mtime {
             h.mtime = 0;
         }
-        h.m_write(output)?;
+        h.m_write_ne(output)?;
         if h.filesize != 0 {
             let size = h.filesize as usize;
             let mut buf = vec![0; size];
