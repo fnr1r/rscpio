@@ -2,6 +2,8 @@ use std::io::{Error as IoError, Read, Seek, Write};
 
 use easy_ext::ext;
 
+use crate::{CpioEntry, CpioIter};
+
 #[ext(WritePadExt)]
 pub impl<T: Write> T {
     fn write_padding_with_pos(
@@ -88,5 +90,15 @@ pub impl<T: Write> T {
             _ => unreachable!(),
         }
         Ok(())
+    }
+}
+
+#[ext(CpioIterExt)]
+pub impl<T: Read> T {
+    fn read_as_cpio(&mut self) -> impl Iterator<Item = CpioEntry> {
+        CpioIter(self, false)
+    }
+    fn read_as_cpio_with_trailer(&mut self) -> impl Iterator<Item = CpioEntry> {
+        CpioIter(self, true)
     }
 }

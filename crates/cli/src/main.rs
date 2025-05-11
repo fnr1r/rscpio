@@ -1,84 +1,53 @@
 use std::{
-    any::Any,
     fs::File,
-    io::{Error as IoError, Read, Seek, Write, stdin, stdout},
+    io::{Error as IoError, Read, stdin, stdout},
     path::Path,
 };
 
 use anyhow::Result;
 use cpiolib::{
-    CpioEntry, Header,
-    ext::{ReadExt, WriteExt, WriteSeekPadExt},
+    CpioEntry,
+    ext::{CpioIterExt, WriteExt, WriteSeekPadExt},
 };
-use minibinrw::{MiniBinError, MiniBinRead, MiniBinWrite};
+use minibinrw::{BinWritable, MiniBinWrite};
 
 mod cli;
 
 use cli::{Cli, Command, ListArgs, StripArgs, cli};
 
 fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
-    let mut entry;
     let eol = if args.zero { '\0' } else { '\n' };
-    loop {
-        entry = CpioEntry::m_read_ne(reader)?;
-        if entry.is_trailer() {
-            break;
-        }
+    for entry in reader.read_as_cpio() {
         let txt = entry.header.name.to_string_lossy();
         print!("{}{}", txt, eol);
     }
     Ok(())
 }
 
-fn cpiostrip<W: Write + Seek>(
-    input: &mut impl Read,
+fn cpiostrip<R: Read, W: BinWritable>(
+    input: &mut R,
     output: &mut W,
     args: &StripArgs,
 ) -> Result<()> {
     let mut ino = 1;
-    let mut _h_old;
-    'main: loop {
-        let mut h = match Header::m_read_ne(input) {
-            Ok(res) => res,
-            Err(e) => {
-                'emptychk: {
-                    let MiniBinError::BadMagic(mag) = &e else {
-                        break 'emptychk;
-                    };
-                    let magr = mag.as_inner();
-                    let magt = magr as &dyn Any;
-                    let magd = magt.downcast_ref::<[u8; 6]>();
-                    let Some(data) = magd else {
-                        break 'emptychk;
-                    };
-                    if data != &[0; 6] {
-                        break 'emptychk;
-                    }
-                    break 'main;
-                }
-                return Err(e.into());
-            }
-        };
-        if args.reset_ino {
-            h.ino = ino;
+    for CpioEntry {
+        mut header,
+        contents,
+    } in input.read_as_cpio_with_trailer()
+    {
+        if args.reset_ino && !header.is_trailer() {
+            header.ino = ino;
             ino += 1;
         }
         if args.reset_mtime {
-            h.mtime = 0;
+            header.mtime = 0;
         }
-        h.m_write_ne(output)?;
-        if h.filesize != 0 {
-            let size = h.filesize as usize;
-            let mut buf = vec![0; size];
-            input.read_exact(&mut buf)?;
-            input.read_pad(size)?;
-            output.write_all(&buf)?;
+        header.m_write_ne(output)?;
+        let size = header.filesize as usize;
+        if size != 0 {
+            output.write_all(&contents)?;
             output.write_pad(size)?;
         }
-        if h.is_trailer() {
-            break;
-        }
-        _h_old = h;
     }
     output.write_padding(512, 0)?;
     Ok(())
