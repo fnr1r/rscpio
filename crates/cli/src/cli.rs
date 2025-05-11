@@ -15,8 +15,18 @@ pub struct Cli {
 
 #[derive(Debug, Clone, Subcommand)]
 pub enum Command {
+    /// List files
+    List(ListArgs),
     /// Strips the cpio of select information
     Strip(StripArgs),
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct ListArgs {
+    pub input: Option<PathBuf>,
+    /// end each output line with NUL, not newline
+    #[arg(long)]
+    pub zero: bool,
 }
 
 #[derive(Debug, Clone, Args)]

@@ -7,14 +7,28 @@ use std::{
 
 use anyhow::Result;
 use cpiolib::{
-    Header,
+    CpioEntry, Header,
     ext::{ReadExt, WriteExt, WriteSeekPadExt},
 };
 use minibinrw::{MiniBinError, MiniBinRead, MiniBinWrite};
 
 mod cli;
 
-use cli::{Cli, Command, StripArgs, cli};
+use cli::{Cli, Command, ListArgs, StripArgs, cli};
+
+fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
+    let mut entry;
+    let eol = if args.zero { '\0' } else { '\n' };
+    loop {
+        entry = CpioEntry::m_read_ne(reader)?;
+        if entry.is_trailer() {
+            break;
+        }
+        let txt = entry.header.name.to_string_lossy();
+        print!("{}{}", txt, eol);
+    }
+    Ok(())
+}
 
 fn cpiostrip<W: Write + Seek>(
     input: &mut impl Read,
@@ -114,6 +128,12 @@ fn open_file_or_stdout(path: Option<&Path>) -> Result<File, IoError> {
     })
 }
 
+fn rscpio_list(args: ListArgs) -> Result<()> {
+    let input_ref = args.input.as_ref().map(|e| e.as_ref());
+    let mut input_ref = open_file_or_stdin(input_ref)?;
+    cpio_list(&mut input_ref, &args)
+}
+
 fn rscpio_strip(args: StripArgs) -> Result<()> {
     let input_ref = args.input.as_ref().map(|e| e.as_ref());
     let output_ref = args.output.as_ref().map(|e| e.as_ref());
@@ -128,6 +148,7 @@ fn main() -> Result<()> {
     let Cli { command } = cli();
     use Command as E;
     match command {
+        E::List(args) => rscpio_list(args),
         E::Strip(args) => rscpio_strip(args),
     }
 }
