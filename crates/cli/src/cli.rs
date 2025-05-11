@@ -38,6 +38,8 @@ pub struct StripArgs {
     pub reset_ino: bool,
     #[arg(long)]
     pub reset_mtime: bool,
+    #[arg(long)]
+    pub sort: bool,
 }
 
 pub fn cli() -> Cli {

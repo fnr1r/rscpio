@@ -24,6 +24,32 @@ fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
     Ok(())
 }
 
+fn cpio_strip_sort(input: &mut impl Read, output: &mut impl BinWritable, args: &StripArgs) -> Result<()> {
+    let mut entries = input.read_as_cpio_with_trailer().collect::<Vec<_>>();
+    let trailer = entries.pop();
+    let mut ino = 1;
+    entries.sort_by(|a, b| {
+        a.header.name.cmp(&b.header.name)
+    });
+    for CpioEntry { header, .. } in &mut entries {
+        if args.reset_ino {
+            header.ino = ino;
+            ino += 1;
+        }
+        if args.reset_mtime {
+            header.mtime = 0;
+        }
+    }
+    for entry in entries {
+        entry.m_write_ne(output)?;
+    }
+    if let Some(trailer) = trailer {
+        trailer.m_write_ne(output)?;
+    };
+    output.write_padding(512, 0)?;
+    Ok(())
+}
+
 fn cpiostrip<R: Read, W: BinWritable>(
     input: &mut R,
     output: &mut W,
@@ -108,8 +134,11 @@ fn rscpio_strip(args: StripArgs) -> Result<()> {
     let output_ref = args.output.as_ref().map(|e| e.as_ref());
     let mut input_ref = open_file_or_stdin(input_ref)?;
     let mut output_ref = open_file_or_stdout(output_ref)?;
-    cpiostrip(&mut input_ref, &mut output_ref, &args)?;
-    Ok(())
+    if args.sort {
+        cpio_strip_sort(&mut input_ref, &mut output_ref, &args)
+    } else {
+        cpiostrip(&mut input_ref, &mut output_ref, &args)
+    }
 }
 
 fn main() -> Result<()> {
