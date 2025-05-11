@@ -1,0 +1,13 @@
+[package]
+name = "minibinrw"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+binrw.workspace = true
+thiserror.workspace = true
+trait-set.workspace = true
+
+[dependencies.derive_more]
+workspace = true
+features = ["as_ref"]
