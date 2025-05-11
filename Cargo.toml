@@ -15,4 +15,4 @@ thiserror = "2"
 trait-set = "0.3"
 
 [workspace.dependencies.derive_more]
-version = "1"
+version = "2"
