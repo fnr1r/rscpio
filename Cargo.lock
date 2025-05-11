@@ -155,7 +155,6 @@ version = "0.1.0"
 dependencies = [
  "easy-ext",
  "minibinrw",
- "thiserror",
 ]
 
 [[package]]
@@ -247,7 +246,6 @@ name = "rscpio"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "binrw",
  "clap",
  "clap_complete",
  "cpiolib",

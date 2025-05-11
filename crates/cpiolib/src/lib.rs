@@ -1,4 +1,4 @@
-use std::{ffi::CString, fmt::Debug};
+use std::ffi::CString;
 
 pub mod binrw_impls;
 pub mod ext;
