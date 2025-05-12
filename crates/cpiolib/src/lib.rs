@@ -76,23 +76,34 @@ impl CpioEntry {
 pub struct CpioIterator<T: Read> {
     inner: T,
     with_trailer: bool,
+    done: bool,
 }
 
 impl<T: Read> CpioIterator<T> {
     fn new(inner: T, with_trailer: bool) -> Self {
-        Self { inner, with_trailer }
+        Self {
+            inner,
+            with_trailer,
+            done: false,
+        }
     }
 }
 
 impl<T: Read> Iterator for CpioIterator<T> {
     type Item = Result<CpioEntry, MiniBinError>;
     fn next(&mut self) -> Option<Self::Item> {
+        if self.done {
+            return None;
+        }
         let entry = match CpioEntry::m_read_ne(&mut self.inner) {
             Ok(res) => res,
             e => return Some(e),
         };
-        if entry.is_trailer() && !self.with_trailer {
-            return None;
+        if entry.is_trailer() {
+            self.done = true;
+            if !self.with_trailer {
+                return None;
+            }
         }
         Some(Ok(entry))
     }
