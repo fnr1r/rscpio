@@ -15,7 +15,8 @@ use crate::{
 fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
     let eol = if args.zero { '\0' } else { '\n' };
     for entry in reader.read_as_cpio() {
-        let txt = entry.header.name.to_string_lossy();
+        let header = entry?.header;
+        let txt = header.name.to_string_lossy();
         print!("{}{}", txt, eol);
     }
     Ok(())
@@ -26,7 +27,9 @@ fn cpio_strip_with_sort(
     output: &mut impl BinWritable,
     args: &StripArgs,
 ) -> Result<()> {
-    let mut entries = input.read_as_cpio_with_trailer().collect::<Vec<_>>();
+    let mut entries = input
+        .read_as_cpio_with_trailer()
+        .collect::<Result<Vec<_>, _>>()?;
     let trailer = entries.pop();
     let mut ino = 1;
     entries.sort_by(|a, b| a.header.name.cmp(&b.header.name));
@@ -54,11 +57,11 @@ fn cpio_strip_without_sort<R: Read, W: BinWritable>(
     args: &StripArgs,
 ) -> Result<()> {
     let mut ino = 1;
-    for CpioEntry {
-        mut header,
-        contents,
-    } in input.read_as_cpio_with_trailer()
-    {
+    for entry in input.read_as_cpio_with_trailer() {
+        let CpioEntry {
+            mut header,
+            contents,
+        } = entry?;
         if args.reset_ino && !header.is_trailer() {
             header.ino = ino;
             ino += 1;

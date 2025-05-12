@@ -1,6 +1,6 @@
 use std::{ffi::CString, io::Read};
 
-use minibinrw::MiniBinRead;
+use minibinrw::{MiniBinError, MiniBinRead};
 
 pub mod binrw_impls;
 pub mod ext;
@@ -73,17 +73,27 @@ impl CpioEntry {
 }
 
 #[derive(Debug)]
-pub struct CpioIter<T: Read>(T, bool);
+pub struct CpioIterator<T: Read> {
+    inner: T,
+    with_trailer: bool,
+}
 
-impl<T: Read> Iterator for CpioIter<T> {
-    type Item = CpioEntry;
+impl<T: Read> CpioIterator<T> {
+    fn new(inner: T, with_trailer: bool) -> Self {
+        Self { inner, with_trailer }
+    }
+}
+
+impl<T: Read> Iterator for CpioIterator<T> {
+    type Item = Result<CpioEntry, MiniBinError>;
     fn next(&mut self) -> Option<Self::Item> {
-        let Ok(entry) = CpioEntry::m_read_ne(&mut self.0) else {
-            return None;
+        let entry = match CpioEntry::m_read_ne(&mut self.inner) {
+            Ok(res) => res,
+            e => return Some(e),
         };
-        if entry.is_trailer() {
-            return if self.1 { Some(entry) } else { None };
+        if entry.is_trailer() && !self.with_trailer {
+            return None;
         }
-        Some(entry)
+        Some(Ok(entry))
     }
 }
