@@ -1,9 +1,8 @@
 use std::io::{Error as IoError, Read, Seek, Write};
 
 use easy_ext::ext;
-use minibinrw::MiniBinError;
 
-use crate::{CpioEntry, CpioIterator};
+use crate::CpioIterator;
 
 #[ext(WritePadExt)]
 pub impl<T: Write> T {
@@ -96,12 +95,10 @@ pub impl<T: Write> T {
 
 #[ext(CpioIterExt)]
 pub impl<T: Read> T {
-    fn read_as_cpio(&mut self) -> impl Iterator<Item = Result<CpioEntry, MiniBinError>> {
+    fn read_as_cpio(&mut self) -> CpioIterator<&mut T> {
         CpioIterator::new(self, false)
     }
-    fn read_as_cpio_with_trailer(
-        &mut self,
-    ) -> impl Iterator<Item = Result<CpioEntry, MiniBinError>> {
+    fn read_as_cpio_with_trailer(&mut self) -> CpioIterator<&mut T> {
         CpioIterator::new(self, true)
     }
 }
