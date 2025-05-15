@@ -5,7 +5,7 @@ mod commands;
 mod termio;
 
 use cli::{Cli, Command, cli};
-use commands::{rscpio_list, rscpio_strip};
+use commands::{rscpio_create, rscpio_list, rscpio_strip};
 
 fn main() -> Result<()> {
     //println!("Hello, world!");
@@ -18,6 +18,7 @@ fn main() -> Result<()> {
     }
     use Command as E;
     match command {
+        E::Create(args) => rscpio_create(&args, &shared_args),
         E::List(args) => rscpio_list(&args, &shared_args),
         E::Strip(args) => rscpio_strip(&args, &shared_args),
     }

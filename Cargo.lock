@@ -292,6 +292,7 @@ dependencies = [
  "clap",
  "clap_complete",
  "cpiolib",
+ "easy-ext",
  "fstr",
  "libc",
  "minibinrw",
