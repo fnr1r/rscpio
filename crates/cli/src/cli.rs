@@ -11,6 +11,9 @@ use clap::{Args, Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+    /// Change to directory DIR
+    #[arg(short = 'D', long)]
+    pub directory: Option<PathBuf>,
 }
 
 #[derive(Debug, Clone, Subcommand)]
