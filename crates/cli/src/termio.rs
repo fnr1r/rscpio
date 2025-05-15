@@ -1,8 +1,9 @@
 use std::{
     fs::File,
     io::{Error, ErrorKind, Read, Result, Seek, SeekFrom, Write, stdin, stdout},
-    path::PathBuf,
 };
+
+use camino::Utf8PathBuf as PathBuf;
 
 fn part_cur_err() -> Error {
     Error::new(

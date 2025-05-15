@@ -1,5 +1,4 @@
-use std::path::PathBuf;
-
+use camino::Utf8PathBuf as PathBuf;
 use clap::{Args, Parser, Subcommand};
 
 /// rscpio is GNU cpio but extra features
