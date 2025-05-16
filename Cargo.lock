@@ -168,6 +168,7 @@ dependencies = [
  "easy-ext",
  "minibinrw",
  "rustix",
+ "static_assertions",
 ]
 
 [[package]]
@@ -300,6 +301,12 @@ dependencies = [
  "linux-raw-sys",
  "windows-sys",
 ]
+
+[[package]]
+name = "static_assertions"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fa13613355688665b68639b1c378a62dbedea78aff0fc59a4fa656cbbdec657"
 
 [[package]]
 name = "strsim"

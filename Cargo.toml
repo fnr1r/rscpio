@@ -12,6 +12,7 @@ cpiolib = { path = "crates/cpiolib" }
 easy-ext = "1"
 minibinrw = { path = "crates/minibinrw" }
 rustix = "1"
+static_assertions = "1"
 thiserror = "2"
 trait-set = "0.3"
 
