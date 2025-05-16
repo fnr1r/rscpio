@@ -1,6 +1,7 @@
 use std::{ffi::CString, io::Read};
 
 use minibinrw::{MiniBinError, MiniBinRead};
+use rustix::fs::{FileType, Mode};
 
 pub mod binrw_impls;
 pub mod ext;
@@ -18,6 +19,8 @@ pub fn trailer_name_cstring() -> CString {
     // SAFETY: TRAILER_NAME does not contain null
     unsafe { txt.unwrap_unchecked() }
 }
+
+const MODE_BITS: u16 = 0o7777;
 
 #[derive(Debug, Clone)]
 pub struct Header {
@@ -57,6 +60,18 @@ impl Header {
     }
     pub fn is_trailer(&self) -> bool {
         self.name.as_bytes() == TRAILER_NAME.as_bytes()
+    }
+    pub fn file_mode_raw(&self) -> u16 {
+        self.mode as u16 & MODE_BITS
+    }
+    pub fn file_type_raw(&self) -> u16 {
+        (self.mode >> 12) as u16
+    }
+    pub fn file_mode(&self) -> Mode {
+        Mode::from_raw_mode(self.mode)
+    }
+    pub fn file_type(&self) -> FileType {
+        FileType::from_raw_mode(self.mode)
     }
 }
 
