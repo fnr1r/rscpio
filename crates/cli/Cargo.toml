@@ -12,5 +12,8 @@ cpiolib.workspace = true
 fstr = "0.2.13"
 libc = "0.2"
 minibinrw.workspace = true
-rustix.workspace = true
 static-slicing = "0.2.0"
+
+[dependencies.rustix]
+workspace = true
+features = ["fs"]
