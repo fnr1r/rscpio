@@ -1,11 +1,11 @@
 use anyhow::Result;
 
 mod cli;
-mod impls;
+mod commands;
 mod termio;
 
 use cli::{Cli, Command, cli};
-use impls::{rscpio_list, rscpio_strip};
+use commands::{rscpio_list, rscpio_strip};
 
 fn main() -> Result<()> {
     //println!("Hello, world!");

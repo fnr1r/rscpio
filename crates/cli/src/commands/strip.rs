@@ -1,4 +1,4 @@
-use std::io::{BufReader, BufWriter, Read};
+use std::io::{Read, Write};
 
 use anyhow::Result;
 use cpiolib::{
@@ -7,24 +7,11 @@ use cpiolib::{
 };
 use minibinrw::{BinWritable, MiniBinWrite};
 
-use crate::{
-    cli::{ListArgs, StripArgs},
-    termio::{PartialCursor, input_file_or_stdin, output_file_or_stdout},
-};
-
-fn cpio_list(reader: &mut impl Read, args: &ListArgs) -> Result<()> {
-    let eol = if args.zero { '\0' } else { '\n' };
-    for entry in reader.read_as_cpio() {
-        let header = entry?.header;
-        let txt = header.name.to_string_lossy();
-        print!("{}{}", txt, eol);
-    }
-    Ok(())
-}
+use crate::cli::StripArgs;
 
 fn cpio_strip_with_sort(
     input: &mut impl Read,
-    output: &mut impl BinWritable,
+    output: &mut impl Write,
     args: &StripArgs,
 ) -> Result<()> {
     let mut entries = input
@@ -51,9 +38,9 @@ fn cpio_strip_with_sort(
     Ok(())
 }
 
-fn cpio_strip_without_sort<R: Read, W: BinWritable>(
-    input: &mut R,
-    output: &mut W,
+fn cpio_strip_without_sort(
+    input: &mut impl Read,
+    output: &mut impl Write,
     args: &StripArgs,
 ) -> Result<()> {
     let mut ino = 1;
@@ -79,21 +66,16 @@ fn cpio_strip_without_sort<R: Read, W: BinWritable>(
     Ok(())
 }
 
-pub fn rscpio_list(args: ListArgs) -> Result<()> {
-    let mut input_ref = BufReader::new(input_file_or_stdin(&args.input)?);
-    cpio_list(&mut input_ref, &args)
-}
-
-pub fn rscpio_strip(args: StripArgs) -> Result<()> {
-    let mut input_ref = BufReader::new(input_file_or_stdin(&args.input)?);
-    let output_ref = output_file_or_stdout(&args.output)?;
-    let output_ref = PartialCursor::new(output_ref);
-    let mut output_ref = BufWriter::new(output_ref);
+pub fn cpio_strip(
+    input: &mut impl Read,
+    output: &mut impl BinWritable,
+    args: &StripArgs,
+) -> Result<()> {
     if args.sort {
-        cpio_strip_with_sort(&mut input_ref, &mut output_ref, &args)?;
+        cpio_strip_with_sort(input, output, args)?;
     } else {
-        cpio_strip_without_sort(&mut input_ref, &mut output_ref, &args)?;
+        cpio_strip_without_sort(input, output, args)?;
     }
-    output_ref.write_padding(512, 0)?;
+    output.write_padding(512, 0)?;
     Ok(())
 }
