@@ -9,4 +9,8 @@ camino = "1"
 clap = { version = "4.5", features = ["derive"] }
 clap_complete = "4.5"
 cpiolib.workspace = true
+fstr = "0.2.13"
+libc = "0.2"
 minibinrw.workspace = true
+rustix.workspace = true
+static-slicing = "0.2.0"

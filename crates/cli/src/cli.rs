@@ -10,9 +10,21 @@ use clap::{Args, Parser, Subcommand};
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,
+    #[command(flatten)]
+    pub args: SharedArgs,
+}
+
+#[derive(Debug, Clone, Args)]
+pub struct SharedArgs {
     /// Change to directory DIR
     #[arg(short = 'D', long)]
     pub directory: Option<PathBuf>,
+    /// Verbosely list the files processed
+    #[arg(short, long)]
+    pub verbose: bool,
+    /// Print a "." for each file processed
+    #[arg(short = 'V', long = "dot")]
+    pub print_dot: bool,
 }
 
 #[derive(Debug, Clone, Subcommand)]

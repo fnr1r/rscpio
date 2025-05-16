@@ -214,6 +214,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fstr"
+version = "0.2.13"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "17e4d821c226048ee351e9f7cf8554b5f226ca41b35ffe632eddaa3a8934da2f"
+
+[[package]]
 name = "heck"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -286,7 +292,11 @@ dependencies = [
  "clap",
  "clap_complete",
  "cpiolib",
+ "fstr",
+ "libc",
  "minibinrw",
+ "rustix",
+ "static-slicing",
 ]
 
 [[package]]
@@ -301,6 +311,12 @@ dependencies = [
  "linux-raw-sys",
  "windows-sys",
 ]
+
+[[package]]
+name = "static-slicing"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b326a2579a677fbdecf68751c3ec8e29f022f6aa470c274fcd278de039dc2962"
 
 [[package]]
 name = "static_assertions"
